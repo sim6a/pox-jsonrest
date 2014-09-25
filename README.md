@@ -1,5 +1,5 @@
 POX
-==============
+===
 
 POX is a networking software platform written in Python.
 
@@ -19,7 +19,7 @@ POX currently communicates with OpenFlow 1.0 switches and includes
 special support for the Open vSwitch/Nicira extensions.
 
 pox.py
---------------
+------
 
 pox.py boots up POX. It takes a list of module names on the command line,
 locates the modules, calls their launch() function (if it exists), and
@@ -42,5 +42,5 @@ be given first:
     --verbose      print stack traces for initialization exceptions
     --no-openflow  don't start the openflow module automatically
 
-REST API
---------------
+JSON-REST API
+-------------
