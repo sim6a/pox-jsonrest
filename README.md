@@ -32,14 +32,14 @@ To perform this, invoke as follows:
 
 ###RESTful web services
 
-|URI                                                                           |Method|Description|
-|------------------------------------------------------------------------------|------|-----------|
-|`/web/jsonrest/of/controller/info`                                            |GET   |Returns information about the controller|
-|`/web/jsonrest/discovery/links`                                               |GET   |Returns a list of all inter-switch discovered links (note that these are only for switches connected to the controller)|
-|`/web/jsonrest/of/switches`                                                   |GET   |Returns a list of all switches connected to the controller|
-|`/web/jsonrest/of/switch/\<switchDpid\>/\<statType\>`                         |GET   |Returns per switch stats. **statType:** aggregate, desc, flows, ports, queues, tables|
-|`/web/jsonrest/of/switch/\<switchDpid\>/record/\<recordType\>/\<lastRecords\>`|GET   |Returns per switch last recorded stats. **recordType:** aggports. **lastRecords:** number of last records to request|
-|`/web/jsonrest/host_tracker/devices`                                          |GET   |Returns a list of all hosts tracked by the controller|
+|URI                                                                     |Method|Description|
+|------------------------------------------------------------------------|------|-----------|
+|`/web/jsonrest/of/controller/info`                                      |GET   |Returns information about the controller|
+|`/web/jsonrest/discovery/links`                                         |GET   |Returns a list of all inter-switch discovered links (note that these are only for switches connected to the controller)|
+|`/web/jsonrest/of/switches`                                             |GET   |Returns a list of all switches connected to the controller|
+|`/web/jsonrest/of/switch/<switchDpid>/<statType>`                       |GET   |Returns per switch stats. **statType:** aggregate, desc, flows, ports, queues, tables|
+|`/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`|GET   |Returns per switch last recorded stats. **recordType:** aggports. **lastRecords:** number of last records to request|
+|`/web/jsonrest/host_tracker/devices`                                    |GET   |Returns a list of all hosts tracked by the controller|
 
 Note: **switchDpid** is the switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX.
 
