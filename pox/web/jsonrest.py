@@ -18,6 +18,28 @@ with the POX controller and its managed resources through HTTP methods over
 URL. JSON-REST is based on the micro web-framework Bottle
 (:mod:`~pox.lib.bottle`).
 
+JSON-REST enables to set host and port to deploy RESTful web services. For
+example, listen to any host in port 8082:
+
+    $ ./pox.py web.jsonrest --host=0.0.0.0 --port=8082
+
+Some services depend on other modules to perform their tasks. If you do not
+launch these modules, JSON-REST does it. Following these modules:
+ - :mod:`pox.openflow.discovery`
+ - :mod:`pox.host_tracker`
+
+Sometimes you may need a forwarding module to enable communication among hosts
+and switches from the network. For example, invoke as follows:
+
+    $ ./pox.py forwarding.l2_learning web.jsonrest
+
+Example: run the POX controller to listen OpenFlow messages in port 6633,
+deploying a layer 2 learning switch application and a RESTful interface that
+listens to any host in port 8082; see logs from information level:
+
+    $ ./pox.py log.level --INFO openflow.of_01 --port=6633
+    forwarding.l2_learning web.jsonrest --host=0.0.0.0 --port=8082
+
 Copyright (c) 2012, Felipe Estrada-Solano
 License: Apache License, Version 2.0 (see LICENSE for details)
 """
@@ -25,11 +47,14 @@ License: Apache License, Version 2.0 (see LICENSE for details)
 # import required libraries
 from pox.lib.bottle import Bottle, response
 from pox.core import core
+from pox.record_plaintext.switch_aggports_record import get_file_path
 import pox.openflow.libopenflow_01 as of
 import pox.lib.util
 import threading
 import json
 import time
+import os
+import ast
 
 # initialize global variables
 app = Bottle()
@@ -39,7 +64,7 @@ port = long(38663)
 
 # rest functions
 @app.hook("after_request")
-def enable_cors():
+def enable_cors ():
     """
     Callback function to allow Cross-Origin Resource Sharing (CORS) for the
     content returned by all of the URL.
@@ -51,7 +76,7 @@ def enable_cors():
     response.headers["Access-Control-Allow-Headers"] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
 
 @app.route("/web/jsonrest/of/controller/info")
-def get_controller_information():
+def get_controller_information ():
     """
     Returns information about the controller. This includes:
      - Listen address (IP and port).
@@ -61,11 +86,13 @@ def get_controller_information():
     :except BaseException: If any error occurs returns an empty object
     """
     try:
+        # get and verify module
         data = {}
         of = core.components.get("of_01")
         if of == None:
             log.error("Error getting module pox.openflow.of_01")
             return json.dumps(data)
+        # build and return json data
         data = {
                 "listenAddress": "*" if (of.address == "0.0.0.0") else of.address,
                 "listenPort": of.port
@@ -77,7 +104,7 @@ def get_controller_information():
         return json.dumps(data)
 
 @app.route("/web/jsonrest/discovery/links")
-def get_discovered_links():
+def get_discovered_links ():
     """
     Returns a list of all inter-switch discovered links (note that these are
     only for switches connected to the controller). This includes:
@@ -92,11 +119,13 @@ def get_discovered_links():
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # get and verify module
         dataArray = []
         discovery = core.components.get("openflow_discovery")
         if discovery == None:
             log.error("Error getting module pox.openflow.discovery")
             return json.dumps(dataArray)
+        # build and return json data
         links = discovery.adjacency
         for link in links.keys():
             data = {
@@ -113,7 +142,7 @@ def get_discovered_links():
         return json.dumps(dataArray)
 
 @app.route("/web/jsonrest/of/switches")
-def get_switches():
+def get_switches ():
     """
     Returns a list of all switches connected to the controller. This includes:
      - String DPID (XX:XX:XX:XX:XX:XX:XX:XX)
@@ -125,19 +154,21 @@ def get_switches():
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # get and verify module
         dataArray = []
         openflow = core.components.get("openflow")
         if openflow == None:
             log.error("Error getting module pox.openflow")
             return json.dumps(dataArray)
+        # build and return json data
         connections = openflow._connections
         fakePort = port
         for connKey in connections.keys():
             fakePort += 1
             connection = connections.get(connKey)
-            switchDpid = dpidToStr(connection.dpid)
+            switch_dpid = dpidToStr(connection.dpid)
             data = {
-                    "dpid": switchDpid,
+                    "dpid": switch_dpid,
                     "remoteIp": "192.168.56.2",
                     "remotePort": fakePort,
                     "connectedSince": connection.connect_time * 1000,
@@ -149,32 +180,35 @@ def get_switches():
         dataArray = []
         return json.dumps(dataArray)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/aggregate")
-def get_switch_aggregate(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/aggregate")
+def get_switch_aggregate (switch_dpid):
     """
     Returns per switch aggregate stats. This includes:
      - Bytes
      - Flows
      - Packets
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
     :return: Switch aggregate stats
     :rtype: JSONObject
     :except BaseException: If any error occurs returns an empty object
     """
     try:
+        # build openflow message
         bodyMsg = of.ofp_aggregate_stats_request()
         bodyMsg.match = of.ofp_match()
         bodyMsg.table_id = of.TABLE_ALL
         bodyMsg.out_port = of.OFPP_NONE
         msg = of.ofp_stats_request(body = bodyMsg)
         msg.type = of.OFPST_AGGREGATE
+        # get and verify stats
         data = {}
-        aggStats = get_switch_stats(switchDpid, msg, "aggregate flows")
+        aggStats = get_switch_stats(switch_dpid, msg, "aggregate flows")
         if aggStats == None:
             log.error("Error getting aggregate stats")
             return json.dumps(data)
+        # build and return json data
         data = {
                 "bytes": aggStats.byte_count,
                 "flows": aggStats.flow_count,
@@ -186,30 +220,33 @@ def get_switch_aggregate(switchDpid):
         data = {}
         return json.dumps(data)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/desc")
-def get_switch_description(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/desc")
+def get_switch_description (switch_dpid):
     """
-    Returns per switch description. This includes:
+    Returns per switch a description. This includes:
      - Serial number
      - Manufacturer
      - Hardware
      - Software
      - Datapath
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
     :return: Switch description
     :rtype: JSONObject
     :except BaseException: If any error occurs returns an empty object
     """
     try:
+        # build openflow message
         msg = of.ofp_stats_request()
         msg.type = of.OFPST_DESC
+        # get and verify stats
         data = {}
-        descStats = get_switch_stats(switchDpid, msg, "description")
+        descStats = get_switch_stats(switch_dpid, msg, "description")
         if descStats == None:
             log.error("Error getting description stats")
             return json.dumps(data)
+        # build and return json data
         data = {
                 "serialNumber": descStats.serial_num,
                 "manufacturer": descStats.mfr_desc,
@@ -223,10 +260,10 @@ def get_switch_description(switchDpid):
         data = {}
         return json.dumps(data)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/flows")
-def get_switch_flows(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/flows")
+def get_switch_flows (switch_dpid):
     """
-    Returns per switch list of all flow stats. This includes:
+    Returns per switch a list of all flow stats. This includes:
      - Input port
      - Data layer source/destination
      - Network source/destination
@@ -240,24 +277,27 @@ def get_switch_flows(switchDpid):
      - Cookies
      - Output ports
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
-    :return: Switch list of all flow stats
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :return: List of all flow stats from the requested switch
     :rtype: JSONArray
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # build openflow message
         bodyMsg = of.ofp_flow_stats_request()
         bodyMsg.match = of.ofp_match()
         bodyMsg.table_id = of.TABLE_ALL
         bodyMsg.out_port = of.OFPP_NONE
         msg = of.ofp_stats_request(body = bodyMsg)
         msg.type = of.OFPST_FLOW
+        # get and verify stats
         dataArray = []
-        stats = get_switch_stats(switchDpid, msg, "flows")
+        stats = get_switch_stats(switch_dpid, msg, "flows")
         if stats == None:
             log.error("Error getting flow stats")
             return json.dumps(dataArray)
+        # build and return json data
         for flowStats in stats:
             outports = ""
             for action in flowStats.actions:
@@ -312,10 +352,10 @@ def get_switch_flows(switchDpid):
         dataArray = []
         return json.dumps(dataArray)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/ports")
-def get_switch_ports(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/ports")
+def get_switch_ports (switch_dpid):
     """
-    Returns per switchlist of all port stats. This includes:
+    Returns per switch a list of all port stats. This includes:
      - Port number
      - Received/transmitted packets
      - Received/transmitted bytes
@@ -326,22 +366,25 @@ def get_switch_ports(switchDpid):
      - Received packets with CRC error
      - Collisions
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
-    :return: Switch list of all port stats
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :return: List of all port stats from the requested switch
     :rtype: JSONArray
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # build openflow message
         bodyMsg = of.ofp_port_stats_request()
         bodyMsg.port_no = of.OFPP_NONE
         msg = of.ofp_stats_request(body = bodyMsg)
         msg.type = of.OFPST_PORT
+        # get and verify stats
         dataArray = []
-        stats = get_switch_stats(switchDpid, msg, "ports")
+        stats = get_switch_stats(switch_dpid, msg, "ports")
         if stats == None:
             log.error("Error getting port stats")
             return json.dumps(dataArray)
+        # build and return json data
         for portStats in stats:
             data = {
                     "number": portStats.port_no,
@@ -365,33 +408,36 @@ def get_switch_ports(switchDpid):
         dataArray = []
         return json.dumps(dataArray)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/queues")
-def get_switch_queues(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/queues")
+def get_switch_queues (switch_dpid):
     """
-    Returns per switch list of all queue stats. This includes:
+    Returns per switch a list of all queue stats. This includes:
      - Queue ID
      - Port number
      - Transmitted bytes
      - Transmitted packets
      - Transmitted packets with error
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
-    :return: Switch list of all queue stats
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :return: List of all queue stats from the requested switch
     :rtype: JSONArray
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # build openflow message
         bodyMsg = of.ofp_queue_stats_request()
         bodyMsg.port_no = of.OFPP_ALL
         bodyMsg.queue_id = of.OFPQ_ALL
         msg = of.ofp_stats_request(body = bodyMsg)
         msg.type = of.OFPST_QUEUE
+        # get and verify stats
         dataArray = []
-        stats = get_switch_stats(switchDpid, msg, "queues")
+        stats = get_switch_stats(switch_dpid, msg, "queues")
         if stats == None:
             log.error("Error getting queue stats")
             return json.dumps(dataArray)
+        # build and return json data
         for queueStats in stats:
             data = {
                     "id": queueStats.queue_id,
@@ -407,10 +453,62 @@ def get_switch_queues(switchDpid):
         dataArray = []
         return json.dumps(dataArray)
 
-@app.route("/web/jsonrest/of/switch/<switchDpid>/tables")
-def get_switch_tables(switchDpid):
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/record/aggports/<last_records>")
+def get_switch_record_aggregate_ports (switch_dpid, last_records):
     """
-    Returns per switch list of all table stats. This includes:
+    Returns per switch a list of last requested aggregate port stats. This
+    includes:
+     - Received/transmitted packets
+     - Received/transmitted bytes
+     - Received/transmitted dropped packets
+     - Received/transmitted packets with error
+     - Received packets with frame error
+     - Received packets with overrun error
+     - Received packets with CRC error
+     - Collisions
+    
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :param last_records: Last records of aggregate port stats to request
+    :type switch_dpid: str
+    :return: List of last requested aggregate port stats from the switch
+    :rtype: JSONArray
+    :except BaseException: If any error occurs returns an empty list
+    """
+    try:
+        # get and verify flat file
+        dataArray = []
+        dpid = strToDPID(switch_dpid)
+        path = get_file_path(dpid)
+        if not os.path.isfile(path):
+            log.error("File %s does not exist" % path)
+            return json.dumps(dataArray)
+        # read file (r = read) in a list
+        records = []
+        f = open(path, "r")
+        for line in f:
+            records.append(line)
+        f.close()
+        # slide list to return last records requested
+        last_records = int(last_records)
+        if len(records) > last_records:
+            slide_from = len(records) - last_records
+            records = records[slide_from:]
+        #  build and return json data
+        for r in records:
+            # convert string to dict
+            data = ast.literal_eval("{'" + r[:-2].replace("|", "', '").replace("=", "':'") + "'}")
+            dataArray.append(data)
+        return json.dumps(dataArray)
+    except BaseException, e:
+        log.error(e.message)
+        dataArray = []
+        return json.dumps(dataArray)
+
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/tables")
+def get_switch_tables (switch_dpid):
+    """
+    Returns per switch a list of all table stats. This includes:
      - Table ID
      - Table name
      - Wildcards
@@ -419,20 +517,23 @@ def get_switch_tables(switchDpid):
      - Lookup count
      - Matched count
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
-    :return: Switch list of all table stats
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :return: List of all table stats from the requested switch
     :rtype: JSONArray
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # build openflow message
         msg = of.ofp_stats_request()
         msg.type = of.OFPST_TABLE
+        # get and verify stats
         dataArray = []
-        stats = get_switch_stats(switchDpid, msg, "tables")
+        stats = get_switch_stats(switch_dpid, msg, "tables")
         if stats == None:
             log.error("Error getting table stats")
             return json.dumps(dataArray)
+        # build and return json data
         for tableStats in stats:
             data = {
                     "id": tableStats.table_id,
@@ -451,7 +552,7 @@ def get_switch_tables(switchDpid):
         return json.dumps(dataArray)
 
 @app.route("/web/jsonrest/host_tracker/devices")
-def get_tracked_devices():
+def get_tracked_devices ():
     """
     Returns a list of all hosts tracked by the controller. This includes:
      - Data layer address
@@ -468,11 +569,13 @@ def get_tracked_devices():
     :except BaseException: If any error occurs returns an empty list
     """
     try:
+        # get and verify module
         dataArray = []
         host_tracker = core.components.get("host_tracker")
         if host_tracker == None:
             log.error("Error getting module pox.host_tracker")
             return json.dumps(dataArray)
+        # build and return json data
         devices = host_tracker.entryByMAC
         for deviceKey in devices.keys():
             device = devices.get(deviceKey)
@@ -485,7 +588,7 @@ def get_tracked_devices():
                     "dataLayerAddress": str(device.macaddr),
                     "networkAddresses": networkAddresses,
                     "lastSeen": device.lastTimeSeen * 1000,
-                    "switchDpid": dpidToStr(device.dpid),
+                    "switch_dpid": dpidToStr(device.dpid),
                     "port": device.port
                     }
             dataArray.append(data)
@@ -496,7 +599,7 @@ def get_tracked_devices():
         return json.dumps(dataArray)
 
 # event handler functions
-def handle_AggregateFlowStatsReceived(event):
+def handle_AggregateFlowStatsReceived (event):
     """
     Handles aggregate flow stats event.
     
@@ -506,7 +609,7 @@ def handle_AggregateFlowStatsReceived(event):
     stats = event.stats
     log.debug("AggregateFlowStatsReceived")
 
-def handle_DescStatsReceived(event):
+def handle_DescStatsReceived (event):
     """
     Handles description stats event.
     
@@ -516,7 +619,7 @@ def handle_DescStatsReceived(event):
     stats = event.stats
     log.debug("SwitchDescReceived")
 
-def handle_FlowStatsReceived(event):
+def handle_FlowStatsReceived (event):
     """
     Handles flow stats event.
     
@@ -526,7 +629,7 @@ def handle_FlowStatsReceived(event):
     stats = event.stats
     log.debug("FlowStatsReceived")
 
-def handle_PortStatsReceived(event):
+def handle_PortStatsReceived (event):
     """
     Handles port stats event.
     
@@ -536,7 +639,7 @@ def handle_PortStatsReceived(event):
     stats = event.stats
     log.debug("PortStatsReceived")
 
-def handle_QueueStatsReceived(event):
+def handle_QueueStatsReceived (event):
     """
     Handles queue stats event.
     
@@ -546,7 +649,7 @@ def handle_QueueStatsReceived(event):
     stats = event.stats
     log.debug("QueueStatsReceived")
 
-def handle_TableStatsReceived(event):
+def handle_TableStatsReceived (event):
     """
     Handles table stats event.
     
@@ -557,12 +660,12 @@ def handle_TableStatsReceived(event):
     log.debug("TableStatsReceived")
 
 # helper functions
-def get_switch_stats(switchDpid, msg, statsType):
+def get_switch_stats (switch_dpid, msg, statsType):
     """
     Returns per switch and per type stats.
     
-    :param switchDpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switchDpid: str
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
     :param msg: Message to send to the requested switch
     :type msg: str
     :param statsType: Identifies the type of stats requested
@@ -572,10 +675,13 @@ def get_switch_stats(switchDpid, msg, statsType):
     :except BaseException: If any error occurs returns None
     """
     try:
+        # check parameters
         global stats
         stats = None
-        dpid = strToDPID(switchDpid)
+        dpid = strToDPID(switch_dpid)
+        # send openflow message
         core.openflow.sendToDPID(dpid, msg.pack())
+        # wait for response to return stats
         initialTime = time.time()
         while stats == None:
             if (time.time() - initialTime) > 15:
@@ -587,7 +693,7 @@ def get_switch_stats(switchDpid, msg, statsType):
         log.error(e.message)
         return None
 
-def dpidToStr(dpid):
+def dpidToStr (dpid):
     """
     Converts DPID from numeric format to format XX:XX:XX:XX:XX:XX:XX:XX.
     
@@ -601,7 +707,7 @@ def dpidToStr(dpid):
     dpidStr = "00:00:" + dpidStr
     return dpidStr
 
-def strToDPID(dpidStr):
+def strToDPID (dpidStr):
     """
     Converts DPID from format XX:XX:XX:XX:XX:XX:XX:XX in numeric format.
     
@@ -618,7 +724,7 @@ def strToDPID(dpidStr):
 # launch function
 def launch (host = None, port = None):
     """
-    Launches JSON REST and its required modules.
+    Runs JSON REST and its required modules.
     
     :param host: Server address to bind to. Pass '0.0.0.0' to listens on all 
                  interfaces including the external one (default: 127.0.0.1).
@@ -627,11 +733,19 @@ def launch (host = None, port = None):
                  privileges (default: 8080).
     :type port: str
     """
-    # launch required modules
-    import pox.openflow.discovery
-    pox.openflow.discovery.launch()
-    import pox.host_tracker
-    pox.host_tracker.launch()
+    # verify and launch required modules
+    module = core.components.get("openflow_discovery")
+    if module is None:
+        import pox.openflow.discovery
+        pox.openflow.discovery.launch()
+    module = core.components.get("host_tracker")
+    if module is None:
+        import pox.host_tracker
+        pox.host_tracker.launch()
+    module = core.components.get("switch_aggports_record")
+    if module is None:
+        import pox.record_plaintext.switch_aggports_record
+        pox.record_plaintext.switch_aggports_record.launch()
     # add listeners
     core.openflow.addListenerByName("AggregateFlowStatsReceived", handle_AggregateFlowStatsReceived)
     core.openflow.addListenerByName("SwitchDescReceived", handle_DescStatsReceived)
