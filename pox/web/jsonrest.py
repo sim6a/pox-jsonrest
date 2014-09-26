@@ -145,7 +145,7 @@ def get_discovered_links ():
 def get_switches ():
     """
     Returns a list of all switches connected to the controller. This includes:
-     - String DPID (XX:XX:XX:XX:XX:XX:XX:XX)
+     - String DPID in format XX:XX:XX:XX:XX:XX:XX:XX
      - Remote address (IP and port)
      - Connection time
     

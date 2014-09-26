@@ -36,29 +36,100 @@ Following the implemented RESTful web services to interact with the POX
 controller:
 
  - **URI:** `/web/jsonrest/of/controller/info`. **Method:** GET. 
- **Description:** retrieves information about the controller. This includes:
+ **Description:** retrieves information about the controller. Data includes:
   - Listen address (IP and port)
  - **URI:** `/web/jsonrest/discovery/links`. **Method:** GET. **Description:**
  retrieves a list of all inter-switch discovered links (note that these are
  only for switches connected to the controller). Requires to launch
- [pox.openflow.discovery](https://github.com/festradasolano/pox/blob/master/pox/openflow/discovery.py).
- This includes:
+ `pox.openflow.discovery`. Data includes:
   - Data layer source/destination
   - Port source/destination
-
-|URI                                                                     |Method|Description|
-|------------------------------------------------------------------------|------|-----------|
-|`/web/jsonrest/of/switches`                                             |GET   |Returns a list of all switches connected to the controller|
-|`/web/jsonrest/of/switch/<switchDpid>/<statType>`                       |GET   |Returns per switch stats. **statType:** aggregate, desc, flows, ports, queues, tables|
-|`/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`|GET   |Returns per switch last recorded stats. **recordType:** aggports. **lastRecords:** number of last records to request|
-|`/web/jsonrest/host_tracker/devices`                                    |GET   |Returns a list of all hosts tracked by the controller|
-
-Note: **switchDpid** is the switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX.
-
-The POX JSON-REST API is based on the [POX Controller](https://github.com/noxrepo/pox),
-a [NOXRepo.org](http://www.noxrepo.org/) project:
+ - **URI:** `/web/jsonrest/host_tracker/devices`. **Method:** GET.
+ **Description:** retrieves a list a list of all hosts tracked by the
+ controller. Requires to launch `pox.openflow.discovery` and `pox.host_tracker`.
+ Data includes:
+  - Data layer address
+  - Network addresses
+  - Attachment point (switch DPID and port)
+  - Last time seen
+ - **URI:** `/web/jsonrest/of/switches`. **Method:** GET. **Description:**
+ retrieves a list of all switches connected to the controller. This includes:
+  - String DPID in format XX:XX:XX:XX:XX:XX:XX:XX
+  - Remote address (IP and port)
+  - Connection time
+ - **URI:** `/web/jsonrest/of/switch/<switchDpid>/<statType>`. **Method:** GET.
+ **Description:** retrieves per switch stats. Arguments are as follows:
+  - *switchDpid:* switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX
+  - *statType:* aggregate, desc, flows, ports, queues, tables
+ This includes:
+  - Aggregate stats:
+   - Bytes
+   - Flows
+   - Packets
+  - Description stats:
+   - Serial number
+   - Manufacturer
+   - Hardware
+   - Software
+   - Datapath
+  - Flows stats:
+   - Input port
+   - Data layer source/destination
+   - Network source/destination
+   - Transport source/destination
+   - Wildcards
+   - Bytes
+   - Packets
+   - Time
+   - Idle timeout
+   - Hard timeout
+   - Cookies
+   - Output ports
+  - Ports stats:
+   - Port number
+   - Received/transmitted packets
+   - Received/transmitted bytes
+   - Received/transmitted dropped packets
+   - Received/transmitted packets with error
+   - Received packets with frame error
+   - Received packets with overrun error
+   - Received packets with CRC error
+   - Collisions
+  - Queues stats:
+   - Queue ID
+   - Port number
+   - Transmitted bytes
+   - Transmitted packets
+   - Transmitted packets with error
+  - Tables stats:
+   - Table ID
+   - Table name
+   - Wildcards
+   - Maximum entries
+   - Active count
+   - Lookup count
+   - Matched count
+ - **URI:** `/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`.
+ **Method:** GET. **Description:** retrieves per switch last recorded stats.
+ Arguments are as follows:
+  - *switchDpid:* switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX
+  - *recordType:* aggports
+  - *lastRecords:* number of last records to request
+ This includes:
+  - Aggregate ports stats:
+   - Received/transmitted packets
+   - Received/transmitted bytes
+   - Received/transmitted dropped packets
+   - Received/transmitted packets with error
+   - Received packets with frame error
+   - Received packets with overrun error
+   - Received packets with CRC error
+   - Collisions
 
 ##POX
+
+The POX JSON-REST API is based on the [POX Controller](https://github.com/noxrepo/pox),
+a [NOXRepo.org](http://www.noxrepo.org/) project.
 
 POX is a networking software platform written in Python.
 
