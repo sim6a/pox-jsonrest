@@ -40,7 +40,7 @@ listens to any host in port 8082; see logs from information level:
     $ ./pox.py log.level --INFO openflow.of_01 --port=6633
     forwarding.l2_learning web.jsonrest --host=0.0.0.0 --port=8082
 
-Copyright (c) 2012, Felipe Estrada-Solano
+Copyright (c) 2012, Felipe Estrada-Solano <festradasolano at gmail>
 License: Apache License, Version 2.0 (see LICENSE for details)
 """
 
