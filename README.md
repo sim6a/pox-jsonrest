@@ -35,7 +35,7 @@ To perform this, invoke as follows:
 Following the implemented RESTful web services to interact with the POX
 controller:
 
- - **URI:** `/web/jsonrest/of/controller/info`. **Method:** GET.
+ - **URI:** `/web/jsonrest/of/controller/info`. **Method:** GET. 
  **Description:** retrieves information about the controller. This includes:
   - Listen address (IP and port)
  - **URI:** `/web/jsonrest/discovery/links`. **Method:** GET. **Description:**
