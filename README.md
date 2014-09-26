@@ -32,10 +32,22 @@ To perform this, invoke as follows:
 
 ###RESTful web services
 
+Following the implemented RESTful web services to interact with the POX
+controller:
+
+ - **URI:** `/web/jsonrest/of/controller/info`. **Method:** GET.
+ **Description:** retrieves information about the controller. This includes:
+   - Listen address (IP and port)
+ - **URI:** `/web/jsonrest/discovery/links`. **Method:** GET. **Description:**
+ retrieves a list of all inter-switch discovered links (note that these are
+ only for switches connected to the controller). Requires to launch
+ [pox.openflow.discovery](https://github.com/festradasolano/pox/blob/master/pox/openflow/discovery.py).
+ This includes:
+   - Data layer source/destination
+   - Port source/destination
+
 |URI                                                                     |Method|Description|
 |------------------------------------------------------------------------|------|-----------|
-|`/web/jsonrest/of/controller/info`                                      |GET   |Returns information about the controller|
-|`/web/jsonrest/discovery/links`                                         |GET   |Returns a list of all inter-switch discovered links (note that these are only for switches connected to the controller)|
 |`/web/jsonrest/of/switches`                                             |GET   |Returns a list of all switches connected to the controller|
 |`/web/jsonrest/of/switch/<switchDpid>/<statType>`                       |GET   |Returns per switch stats. **statType:** aggregate, desc, flows, ports, queues, tables|
 |`/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`|GET   |Returns per switch last recorded stats. **recordType:** aggports. **lastRecords:** number of last records to request|

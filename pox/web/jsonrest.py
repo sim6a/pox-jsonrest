@@ -79,7 +79,7 @@ def enable_cors ():
 def get_controller_information ():
     """
     Returns information about the controller. This includes:
-     - Listen address (IP and port).
+     - Listen address (IP and port)
     
     :return: Information about the controller
     :rtype: JSONObject
