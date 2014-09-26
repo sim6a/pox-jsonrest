@@ -53,7 +53,7 @@ controller:
   - Attachment point (switch DPID and port)
   - Last time seen
  - **URI:** `/web/jsonrest/of/switches`. **Method:** GET. **Description:**
- retrieves a list of all switches connected to the controller. This includes:
+ retrieves a list of all switches connected to the controller. Data includes:
   - String DPID in format XX:XX:XX:XX:XX:XX:XX:XX
   - Remote address (IP and port)
   - Connection time
@@ -61,70 +61,72 @@ controller:
  **Description:** retrieves per switch stats. Arguments are as follows:
   - *switchDpid:* switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX
   - *statType:* aggregate, desc, flows, ports, queues, tables
- This includes:
+
+ Data includes:
   - Aggregate stats:
-   - Bytes
-   - Flows
-   - Packets
+    - Bytes
+    - Flows
+    - Packets
   - Description stats:
-   - Serial number
-   - Manufacturer
-   - Hardware
-   - Software
-   - Datapath
+    - Serial number
+    - Manufacturer
+    - Hardware
+    - Software
+    - Datapath
   - Flows stats:
-   - Input port
-   - Data layer source/destination
-   - Network source/destination
-   - Transport source/destination
-   - Wildcards
-   - Bytes
-   - Packets
-   - Time
-   - Idle timeout
-   - Hard timeout
-   - Cookies
-   - Output ports
+    - Input port
+    - Data layer source/destination
+    - Network source/destination
+    - Transport source/destination
+    - Wildcards
+    - Bytes
+    - Packets
+    - Time
+    - Idle timeout
+    - Hard timeout
+    - Cookies
+    - Output ports
   - Ports stats:
-   - Port number
-   - Received/transmitted packets
-   - Received/transmitted bytes
-   - Received/transmitted dropped packets
-   - Received/transmitted packets with error
-   - Received packets with frame error
-   - Received packets with overrun error
-   - Received packets with CRC error
-   - Collisions
+    - Port number
+    - Received/transmitted packets
+    - Received/transmitted bytes
+    - Received/transmitted dropped packets
+    - Received/transmitted packets with error
+    - Received packets with frame error
+    - Received packets with overrun error
+    - Received packets with CRC error
+    - Collisions
   - Queues stats:
-   - Queue ID
-   - Port number
-   - Transmitted bytes
-   - Transmitted packets
-   - Transmitted packets with error
+    - Queue ID
+    - Port number
+    - Transmitted bytes
+    - Transmitted packets
+    - Transmitted packets with error
   - Tables stats:
-   - Table ID
-   - Table name
-   - Wildcards
-   - Maximum entries
-   - Active count
-   - Lookup count
-   - Matched count
+    - Table ID
+    - Table name
+    - Wildcards
+    - Maximum entries
+    - Active count
+    - Lookup count
+    - Matched count
  - **URI:** `/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`.
  **Method:** GET. **Description:** retrieves per switch last recorded stats.
  Arguments are as follows:
   - *switchDpid:* switch DPID in format XX:XX:XX:XX:XX:XX:XX:XX
   - *recordType:* aggports
   - *lastRecords:* number of last records to request
- This includes:
+
+ Data includes:
   - Aggregate ports stats:
-   - Received/transmitted packets
-   - Received/transmitted bytes
-   - Received/transmitted dropped packets
-   - Received/transmitted packets with error
-   - Received packets with frame error
-   - Received packets with overrun error
-   - Received packets with CRC error
-   - Collisions
+    - Received/transmitted packets
+    - Received/transmitted bytes
+    - Received/transmitted dropped packets
+    - Received/transmitted packets with error
+    - Received packets with frame error
+    - Received packets with overrun error
+    - Received packets with CRC error
+    - Collisions
 
 ##POX
 
