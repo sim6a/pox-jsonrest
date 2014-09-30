@@ -1,4 +1,4 @@
-# Copyright 2012 Felipe Estrada-Solano <festradasolano at gmail>
+# Copyright 2012-2014 Felipe Estrada-Solano <festradasolano at gmail>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,8 +40,9 @@ listens to any host in port 8082; see logs from information level:
     $ ./pox.py log.level --INFO openflow.of_01 --port=6633
     forwarding.l2_learning web.jsonrest --host=0.0.0.0 --port=8082
 
-Copyright (c) 2012, Felipe Estrada-Solano <festradasolano at gmail>
-License: Apache License, Version 2.0 (see LICENSE for details)
+Copyright 2012-2014 Felipe Estrada-Solano <festradasolano at gmail>
+
+Distributed under the Apache License, Version 2.0 (see LICENSE for details)
 """
 
 # import required libraries

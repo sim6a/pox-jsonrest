@@ -15,6 +15,7 @@
 """
 Package of components that records information in flat files as plain text.
 
-Copyright (c) 2014, Felipe Estrada-Solano <festradasolano at gmail>
-License: Apache License, Version 2.0 (see LICENSE for details)
+Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
+
+Distributed under the Apache License, Version 2.0 (see LICENSE for details)
 """
