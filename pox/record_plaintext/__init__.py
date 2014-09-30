@@ -1,4 +1,4 @@
-# Copyright 2014 Felipe Estrada-Solano
+# Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 """
 Package of components that records information in flat files as plain text.
 
-Copyright (c) 2014, Felipe Estrada-Solano <festradasolano at gmail>
-License: Apache License, Version 2.0 (see LICENSE for details)
+Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
+
+Distributed under the Apache License, Version 2.0 (see LICENSE for details)
 """

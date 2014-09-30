@@ -1,3 +1,15 @@
+POX JSON REST API
+=================
+POX JSON REST API is written by a number of authors who retain their various
+copyrights. Please check individual source files to find their associated
+copyright holders.  The following should be a list of all copyright holders.
+All such code is licensed under the Apache License, Version 2.0.
+
+Copyright 2012-2014 Felipe Estrada-Solano <festradasolano at gmail>
+
+POX JSON REST API includes code from POX, which is licensed under the Apache
+License, Version 2.0.
+
 POX
 ===
 POX is written by a number of authors who retain their various copyrights.
@@ -5,7 +17,6 @@ Please check individual source files to find their associated copyright
 holders.  The following should be a list of all copyright holders.  All
 such code is licensed under the Apache license version 2.0.
 
-Copyright 2012-2014 Felipe Estrada-Solano
 Copyright 2011-2013 James McCauley
 Copyright 2011-2013 Colin Scott
 Copyright 2011-2012 Andreas Wundsam

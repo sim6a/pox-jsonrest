@@ -1,4 +1,4 @@
-# Copyright 2014 Felipe Estrada-Solano
+# Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ The flat file is created as following:
 [USER HOME] is the user's home directory. [DPID] is the switch DPID in numeric
 format (int).
 
-Copyright (c) 2014, Felipe Estrada-Solano <festradasolano at gmail>
-License: Apache License, Version 2.0 (see LICENSE for details)
+Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
+
+Distributed under the Apache License, Version 2.0 (see LICENSE for details)
 """
 # import required libraries
 from pox.core import core
