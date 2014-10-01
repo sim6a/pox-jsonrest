@@ -26,7 +26,7 @@ format (int).
 
 Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
 
-Distributed under the Apache License, Version 2.0 (see LICENSE for details)
+Distributed under the Apache License, Version 2.0
 """
 # import required libraries
 from pox.core import core
