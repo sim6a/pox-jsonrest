@@ -19,26 +19,37 @@ URL. JSON-REST is based on the micro web-framework Bottle
 (:mod:`~pox.lib.bottle`).
 
 JSON-REST enables to set host and port to deploy RESTful web services. For
-example, listen to any host in port 8082:
+example, listen to any host in port 8082, invoke this:
 
     $ ./pox.py web.jsonrest --host=0.0.0.0 --port=8082
 
-Some services depend on other modules to perform their tasks. If you do not
-launch these modules, JSON-REST does it. Following these modules:
+Some services depend on other modules to correctly perform their tasks. If you
+do not launch these modules, these JSON-REST services will return empty or
+incorrect data. Following these modules:
  - :mod:`pox.openflow.discovery`
  - :mod:`pox.host_tracker`
+ - :mod:`pox.flatfile_record.switch_aggports_ffrecord`
+
+In order to launch JSON-REST along with the aforementioned modules, execute:
+
+    $ ./pox.py openflow.discovery host_tracker
+    flatfile_record.switch_aggports_ffrecord web.jsonrest
 
 Sometimes you may need a forwarding module to enable communication among hosts
-and switches from the network. For example, invoke as follows:
+and switches from the network. For example, to deploy a layer 2 learning switch
+application, do the following:
 
     $ ./pox.py forwarding.l2_learning web.jsonrest
 
-Example: run the POX controller to listen OpenFlow messages in port 6633,
-deploying a layer 2 learning switch application and a RESTful interface that
-listens to any host in port 8082; see logs from information level:
+Full example: run the POX controller to listen OpenFlow messages in port 6633.
+The POX controller deploys a layer 2 learning switch application and a RESTful
+interface to listen any host in port 8082; all RESTful services should return
+correct data. Set logging data to information level. To perform this, invoke as
+follows:
 
-    $ ./pox.py log.level --INFO openflow.of_01 --port=6633
-    forwarding.l2_learning web.jsonrest --host=0.0.0.0 --port=8082
+    $ ./pox.py log.level --DEBUG openflow.of_01 --port=6633 openflow.discovery
+    host_tracker flatfile_record.switch_aggports_ffrecord forwarding.l2_learning
+    web.jsonrest --host=0.0.0.0 --port=8082
 
 Copyright 2012-2014 Felipe Estrada-Solano <festradasolano at gmail>
 
@@ -261,6 +272,58 @@ def get_switch_description (switch_dpid):
         data = {}
         return json.dumps(data)
 
+@app.route("/web/jsonrest/of/switch/<switch_dpid>/ffrecord/aggports/<last_records>")
+def get_switch_flatfile_record_aggregate_ports (switch_dpid, last_records):
+    """
+    Returns per switch a list of last requested aggregate port stats. This
+    includes:
+     - Received/transmitted packets
+     - Received/transmitted bytes
+     - Received/transmitted dropped packets
+     - Received/transmitted packets with error
+     - Received packets with frame error
+     - Received packets with overrun error
+     - Received packets with CRC error
+     - Collisions
+    
+    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
+    :type switch_dpid: str
+    :param last_records: Last records of aggregate port stats to request
+    :type switch_dpid: str
+    :return: List of last requested aggregate port stats from the switch
+    :rtype: JSONArray
+    :except BaseException: If any error occurs returns an empty list
+    """
+    try:
+        # get and verify flat file
+        dataArray = []
+        dpid = strToDPID(switch_dpid)
+        path = get_file_path(dpid)
+        if not os.path.isfile(path):
+            log.error("File %s does not exist" % path)
+            return json.dumps(dataArray)
+        # read file (r = read) in a list
+        records = []
+        f = open(path, "r")
+        for line in f:
+            records.append(line)
+        f.close()
+        # slide list to return last records requested
+        last_records = int(last_records)
+        if len(records) > last_records:
+            slide_from = len(records) - last_records
+            records = records[slide_from:]
+        #  build and return json data
+        for r in records:
+            # convert string to dict
+            data = ast.literal_eval("{'" + r[:-2].replace("|", "', '").replace("=", "':'") + "'}")
+            dataArray.append(data)
+        return json.dumps(dataArray)
+    except BaseException, e:
+        log.error(e.message)
+        dataArray = []
+        return json.dumps(dataArray)
+
 @app.route("/web/jsonrest/of/switch/<switch_dpid>/flows")
 def get_switch_flows (switch_dpid):
     """
@@ -447,58 +510,6 @@ def get_switch_queues (switch_dpid):
                     "txPackets": queueStats.tx_packets,
                     "txErrors": queueStats.tx_errors
                     }
-            dataArray.append(data)
-        return json.dumps(dataArray)
-    except BaseException, e:
-        log.error(e.message)
-        dataArray = []
-        return json.dumps(dataArray)
-
-@app.route("/web/jsonrest/of/switch/<switch_dpid>/record/aggports/<last_records>")
-def get_switch_record_aggregate_ports (switch_dpid, last_records):
-    """
-    Returns per switch a list of last requested aggregate port stats. This
-    includes:
-     - Received/transmitted packets
-     - Received/transmitted bytes
-     - Received/transmitted dropped packets
-     - Received/transmitted packets with error
-     - Received packets with frame error
-     - Received packets with overrun error
-     - Received packets with CRC error
-     - Collisions
-    
-    :param switch_dpid: Switch DPID to request in format XX:XX:XX:XX:XX:XX:XX:XX
-    :type switch_dpid: str
-    :param last_records: Last records of aggregate port stats to request
-    :type switch_dpid: str
-    :return: List of last requested aggregate port stats from the switch
-    :rtype: JSONArray
-    :except BaseException: If any error occurs returns an empty list
-    """
-    try:
-        # get and verify flat file
-        dataArray = []
-        dpid = strToDPID(switch_dpid)
-        path = get_file_path(dpid)
-        if not os.path.isfile(path):
-            log.error("File %s does not exist" % path)
-            return json.dumps(dataArray)
-        # read file (r = read) in a list
-        records = []
-        f = open(path, "r")
-        for line in f:
-            records.append(line)
-        f.close()
-        # slide list to return last records requested
-        last_records = int(last_records)
-        if len(records) > last_records:
-            slide_from = len(records) - last_records
-            records = records[slide_from:]
-        #  build and return json data
-        for r in records:
-            # convert string to dict
-            data = ast.literal_eval("{'" + r[:-2].replace("|", "', '").replace("=", "':'") + "'}")
             dataArray.append(data)
         return json.dumps(dataArray)
     except BaseException, e:
@@ -734,19 +745,6 @@ def launch (host = None, port = None):
                  privileges (default: 8080).
     :type port: str
     """
-    # verify and launch required modules
-    module = core.components.get("openflow_discovery")
-    if module is None:
-        import pox.openflow.discovery
-        pox.openflow.discovery.launch()
-    module = core.components.get("host_tracker")
-    if module is None:
-        import pox.host_tracker
-        pox.host_tracker.launch()
-    module = core.components.get("switch_aggports_ffrecord")
-    if module is None:
-        import pox.flatfile_record.switch_aggports_ffrecord
-        pox.flatfile_record.switch_aggports_ffrecord.launch()
     # add listeners
     core.openflow.addListenerByName("AggregateFlowStatsReceived", handle_AggregateFlowStatsReceived)
     core.openflow.addListenerByName("SwitchDescReceived", handle_DescStatsReceived)
