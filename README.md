@@ -117,7 +117,7 @@ controller:
     - Active count
     - Lookup count
     - Matched count
- - **URI:** `/web/jsonrest/of/switch/<switchDpid>/record/<recordType>/<lastRecords>`.
+ - **URI:** `/web/jsonrest/of/switch/<switchDpid>/ffrecord/<recordType>/<lastRecords>`.
  **Method:** GET. **Description:** retrieves per switch last recorded stats.
  Requires to launch `pox.flatfile_record.switch_aggports_ffrecord`. Arguments
  are as follows:
