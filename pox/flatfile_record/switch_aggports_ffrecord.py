@@ -26,7 +26,7 @@ format (int).
 
 Copyright 2014 Felipe Estrada-Solano <festradasolano at gmail>
 
-Distributed under the Apache License, Version 2.0 (see LICENSE for details)
+Distributed under the Apache License, Version 2.0
 """
 # import required libraries
 from pox.core import core
@@ -156,7 +156,7 @@ class ThreadSwitchAggPortsRecord (Thread):
         """
         self.infinite = infinite
 
-class switch_aggports_record (object):
+class switch_aggports_ffrecord (object):
     """
     Waits for OpenFlow switches to connect and create threads to record switch
     aggregate port stats. When connections go down, removes threads.
@@ -270,7 +270,7 @@ def launch ():
     """
     core.openflow.addListenerByName("PortStatsReceived", handle_PortStatsReceived)
     # verify and launch module
-    module = core.components.get("switch_aggports_record")
+    module = core.components.get("switch_aggports_ffrecord")
     if module is None:
-        core.registerNew(switch_aggports_record)
+        core.registerNew(switch_aggports_ffrecord)
 

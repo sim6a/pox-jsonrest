@@ -42,13 +42,13 @@ listens to any host in port 8082; see logs from information level:
 
 Copyright 2012-2014 Felipe Estrada-Solano <festradasolano at gmail>
 
-Distributed under the Apache License, Version 2.0 (see LICENSE for details)
+Distributed under the Apache License, Version 2.0
 """
 
 # import required libraries
 from pox.lib.bottle import Bottle, response
 from pox.core import core
-from pox.record_plaintext.switch_aggports_record import get_file_path
+from pox.flatfile_record.switch_aggports_ffrecord import get_file_path
 import pox.openflow.libopenflow_01 as of
 import pox.lib.util
 import threading
@@ -743,10 +743,10 @@ def launch (host = None, port = None):
     if module is None:
         import pox.host_tracker
         pox.host_tracker.launch()
-    module = core.components.get("switch_aggports_record")
+    module = core.components.get("switch_aggports_ffrecord")
     if module is None:
-        import pox.record_plaintext.switch_aggports_record
-        pox.record_plaintext.switch_aggports_record.launch()
+        import pox.flatfile_record.switch_aggports_ffrecord
+        pox.flatfile_record.switch_aggports_ffrecord.launch()
     # add listeners
     core.openflow.addListenerByName("AggregateFlowStatsReceived", handle_AggregateFlowStatsReceived)
     core.openflow.addListenerByName("SwitchDescReceived", handle_DescStatsReceived)
