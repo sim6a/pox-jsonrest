@@ -19,7 +19,7 @@ with a defined sample time (default is 10 seconds).
 
 The flat file is created as following:
 
-    /[USER HOME]/pox-log/switchaggports_[DPID].log
+    /[USER HOME]/of-controller-db/pox/switchaggports_[DPID].log
 
 [USER HOME] is the user's home directory. [DPID] is the switch DPID in numeric
 format (int).
