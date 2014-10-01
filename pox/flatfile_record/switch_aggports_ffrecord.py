@@ -82,7 +82,7 @@ class ThreadSwitchAggPortsFFRecord (Thread):
         self.dpid = dpid
         self.sampletime = 10
         self.infinite = True
-    
+
     def run (self):
         """
         Gets and aggregates switch port stats to record them in a flat file as
@@ -145,10 +145,11 @@ class ThreadSwitchAggPortsFFRecord (Thread):
                     + "|rxCrcError=" + str(rx_crc_error) + "|collisions="
                     + str(collisions) + "|\n")
             f.flush()
+            log.debug("Thread is recording aggregate port stats from switch %s" % dpidToStr(self.dpid))
             # sleep sample time seconds
             time.sleep(self.sampletime)
         f.close()
-    
+
     def set_infinite (self, infinite):
         """
         :param infinite: Handles infinite loop in thread
@@ -179,7 +180,7 @@ class switch_aggports_ffrecord (object):
         thread_dict[event.connection.dpid] = thread
         thread.start()
         log.info("Added thread to record aggregate port stats from switch %s" % dpidToStr(event.connection.dpid))
-    
+
     def _handle_ConnectionDown (self, event):
         """
         Handles OpenFlow switches connection down to remove threads.
