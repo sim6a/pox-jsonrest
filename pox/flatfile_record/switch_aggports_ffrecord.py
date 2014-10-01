@@ -63,7 +63,7 @@ def get_file_path (dpid):
     f_name = FILE_NAME + "_" + str(dpid) + ".log"
     return os.path.join(get_dir_path(), f_name)
 
-class ThreadSwitchAggPortsRecord (Thread):
+class ThreadSwitchAggPortsFFRecord (Thread):
     """
     Thread that correspond to each switch to record aggregate switch port stats
     in a flat file as plain text with a defined sample time. Inherits from
@@ -80,7 +80,7 @@ class ThreadSwitchAggPortsRecord (Thread):
         """
         Thread.__init__(self)
         self.dpid = dpid
-        self.sampletime = 5
+        self.sampletime = 10
         self.infinite = True
     
     def run (self):
@@ -175,10 +175,10 @@ class switch_aggports_ffrecord (object):
         :param event: Connection up event
         """
         global thread_dict
-        thread = ThreadSwitchAggPortsRecord(event.connection.dpid)
+        thread = ThreadSwitchAggPortsFFRecord(event.connection.dpid)
         thread_dict[event.connection.dpid] = thread
         thread.start()
-        log.info("Added thread switch port stats record with DPID %s " % (event.connection.dpid))
+        log.info("Added thread to record aggregate port stats from switch %s" % dpidToStr(event.connection.dpid))
     
     def _handle_ConnectionDown (self, event):
         """
@@ -189,7 +189,7 @@ class switch_aggports_ffrecord (object):
         global thread_dict
         thread = thread_dict.pop(event.connection.dpid)
         thread.set_infinite(False)
-        log.info("Removed thread switch port stats record with DPID %s " % (event.connection.dpid))
+        log.info("Removed thread to record aggregate port stats from switch %s" % dpidToStr(event.connection.dpid))
 
 # event handler functions
 def handle_PortStatsReceived (event):
