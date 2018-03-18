@@ -1,6 +1,6 @@
-#POX JSON-REST API
+# POX JSON-REST API
 
-##JSON-REST API
+## JSON-REST API
 
 JSON-REST is a web interface that provides some RESTful services to communicate
 with the POX controller and its managed resources through HTTP methods over
@@ -37,7 +37,7 @@ follows:
 
     $ ./pox.py log.level --DEBUG openflow.of_01 --port=6633 openflow.discovery host_tracker flatfile_record.switch_aggports_ffrecord forwarding.l2_learning web.jsonrest --host=0.0.0.0 --port=8082
 
-###RESTful web services
+### RESTful web services
 
 Following the implemented RESTful web services to interact with the POX
 controller:
@@ -139,7 +139,7 @@ controller:
 The POX JSON-REST API is based on the [POX Controller](https://github.com/noxrepo/pox),
 a [NOXRepo.org](http://www.noxrepo.org/) project.
 
-##POX
+## POX
 
 POX is a networking software platform written in Python.
 
@@ -158,7 +158,7 @@ performance boost!).
 POX currently communicates with OpenFlow 1.0 switches and includes
 special support for the Open vSwitch/Nicira extensions.
 
-###pox.py
+### pox.py
 
 pox.py boots up POX. It takes a list of module names on the command line,
 locates the modules, calls their launch() function (if it exists), and
