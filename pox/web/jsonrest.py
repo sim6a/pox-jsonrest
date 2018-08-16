@@ -57,7 +57,8 @@ Distributed under the Apache License, Version 2.0
 """
 
 # import required libraries
-from pox.lib.bottle import Bottle, response
+from pox.lib.bottle import Bottle, response, request
+from pox.lib.addresses import EthAddr, IPAddr
 from pox.core import core
 from pox.flatfile_record.switch_aggports_ffrecord import get_file_path
 import pox.openflow.libopenflow_01 as of
@@ -86,6 +87,24 @@ def enable_cors ():
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "PUT, GET, POST, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
+
+@app.route(path="/web/jsonrest/forwarding/route", method="POST")
+def post_forwarding_dijkstra ():
+    """
+    Sets route
+    """
+    
+    route = request.json
+    for sw in route:
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match()
+        msg.match.in_port = sw['inPort']
+        msg.actions.append(of.ofp_action_output(port=sw['outPort']))
+        dpid = strToDPID(sw['dpid'])
+        core.openflow.sendToDPID(dpid, msg.pack())
+
+    return "done"
+
 
 @app.route("/web/jsonrest/of/controller/info")
 def get_controller_information ():
